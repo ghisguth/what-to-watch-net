@@ -23,7 +23,7 @@ namespace WhatToWatch
 
             var urls = File.ReadAllLines("interests.txt");
 
-            foreach(var url in urls) 
+            foreach (var url in urls)
             {
                 await this.ProcessUrl(url);
             }
@@ -31,8 +31,9 @@ namespace WhatToWatch
             this.WriteState();
         }
 
-        private Dictionary<string, string> ReadState() {
-            if(!File.Exists(stateFileName))
+        private Dictionary<string, string> ReadState()
+        {
+            if (!File.Exists(stateFileName))
             {
                 return new Dictionary<string, string>();
             }
@@ -44,17 +45,19 @@ namespace WhatToWatch
                 .ToDictionary(s => s.Key, t => t.First()[1]);
         }
 
-        private void WriteState() {
+        private void WriteState()
+        {
             File.WriteAllLines(stateFileName,
                 this.state
                 .Select(s => s.Key + "\t" + s.Value)
                 .ToList());
         }
 
-        private string GetState(string url) {
+        private string GetState(string url)
+        {
             string result;
 
-            if(this.state.TryGetValue(url, out result))
+            if (this.state.TryGetValue(url, out result))
             {
                 return result;
             }
@@ -73,9 +76,12 @@ namespace WhatToWatch
 
             var html = await this.FetchTextAsync(url, 5000, Encoding.UTF8);
 
-            if(string.IsNullOrEmpty(html)) {
+            if (string.IsNullOrEmpty(html))
+            {
                 Console.WriteLine("???");
-            } else {
+            }
+            else
+            {
                 var titleRegex = new Regex("<span id=\"news-title\">(?<title>.*)</span>");
                 var match = titleRegex.Match(html);
                 var title = match.Success ? match.Groups["title"].Value : "?";
@@ -87,14 +93,15 @@ namespace WhatToWatch
 
                 title = title.Replace("[", "\x1b[92m[").Replace("]", "]\x1b[0m");
 
-                if(updated) {
+                if (updated)
+                {
                     title += " \x1b[93m(NEW!)\x1b[0m";
                 }
 
                 Console.WriteLine(title);
             }
         }
-        
+
         public async Task<string> FetchTextAsync(string url, int timeoutInMilliseconds, Encoding encoding)
         {
             try
