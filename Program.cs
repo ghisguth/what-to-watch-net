@@ -1,12 +1,12 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 
-namespace ConsoleApplication
+namespace WhatToWatch
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Task.Run(async () => await new WhatToWatch().Run(args)).Wait();
         }
     }
 }
