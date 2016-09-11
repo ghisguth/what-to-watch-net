@@ -82,24 +82,37 @@ namespace WhatToWatch
             }
             else
             {
-                var titleRegex = new Regex("<span id=\"news-title\">(?<title>.*)</span>");
-                var match = titleRegex.Match(html);
-                var title = match.Success ? match.Groups["title"].Value : "?";
+                string title = ParseTitle(html);
 
                 var oldState = this.GetState(url);
                 this.SetState(url, title);
 
                 var updated = !string.Equals(title, oldState);
 
-                title = title.Replace("[", "\x1b[92m[").Replace("]", "]\x1b[0m");
-
-                if (updated)
-                {
-                    title += " \x1b[93m(NEW!)\x1b[0m";
-                }
+                title = ColorizeProgress(title, updated);
 
                 Console.WriteLine(title);
             }
+        }
+
+        private static string ColorizeProgress(string title, bool updated)
+        {
+            title = title.Replace("[", "\x1b[92m[").Replace("]", "]\x1b[0m");
+
+            if (updated)
+            {
+                title += " \x1b[93m(NEW!)\x1b[0m";
+            }
+
+            return title;
+        }
+
+        private static string ParseTitle(string html)
+        {
+            var titleRegex = new Regex("<span id=\"news-title\">(?<title>.*)</span>");
+            var match = titleRegex.Match(html);
+            var title = match.Success ? match.Groups["title"].Value : "?";
+            return title;
         }
 
         public async Task<string> FetchTextAsync(string url, int timeoutInMilliseconds, Encoding encoding)
