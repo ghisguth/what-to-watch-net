@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,9 +11,15 @@ namespace WhatToWatch
 {
     public class WhatToWatch
     {
+        private static string stateFileName = "state.txt";
+
+        private Dictionary<string, string> state;
+
         public async Task Run(string[] args)
         {
             Console.WriteLine("what?!");
+
+            this.state = this.ReadState();
 
             var urls = File.ReadAllLines("interests.txt");
 
@@ -19,6 +27,44 @@ namespace WhatToWatch
             {
                 await this.ProcessUrl(url);
             }
+
+            this.WriteState();
+        }
+
+        private Dictionary<string, string> ReadState() {
+            if(!File.Exists(stateFileName))
+            {
+                return new Dictionary<string, string>();
+            }
+
+            return File.ReadAllLines(stateFileName)
+                .Select(s => s.Split('\t'))
+                .Where(s => s.Length == 2)
+                .GroupBy(s => s[0])
+                .ToDictionary(s => s.Key, t => t.First()[1]);
+        }
+
+        private void WriteState() {
+            File.WriteAllLines(stateFileName,
+                this.state
+                .Select(s => s.Key + "\t" + s.Value)
+                .ToList());
+        }
+
+        private string GetState(string url) {
+            string result;
+
+            if(this.state.TryGetValue(url, out result))
+            {
+                return result;
+            }
+
+            return string.Empty;
+        }
+
+        private void SetState(string url, string state)
+        {
+            this.state[url] = state;
         }
 
         private async Task ProcessUrl(string url)
@@ -33,7 +79,18 @@ namespace WhatToWatch
                 var titleRegex = new Regex("<span id=\"news-title\">(?<title>.*)</span>");
                 var match = titleRegex.Match(html);
                 var title = match.Success ? match.Groups["title"].Value : "?";
+
+                var oldState = this.GetState(url);
+                this.SetState(url, title);
+
+                var updated = !string.Equals(title, oldState);
+
                 title = title.Replace("[", "\x1b[92m[").Replace("]", "]\x1b[0m");
+
+                if(updated) {
+                    title += " \x1b[93m(NEW!)\x1b[0m";
+                }
+
                 Console.WriteLine(title);
             }
         }
