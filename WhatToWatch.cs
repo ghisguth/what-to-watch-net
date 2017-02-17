@@ -72,7 +72,7 @@ namespace WhatToWatch
 
         private async Task ProcessUrl(string url)
         {
-            Console.WriteLine(url);
+            Console.WriteLine($"\x1b[94m{url}\x1b[0m");
 
             var html = await this.FetchTextAsync(url, 5000, Encoding.UTF8);
 
